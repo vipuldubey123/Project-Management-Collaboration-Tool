@@ -1,0 +1,28 @@
+{
+  "name": "project-manager-backend",
+  "version": "1.0.0",
+  "description": "Project Management Tool Backend",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "prisma:generate": "npx prisma generate",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "prisma": "^5.7.0"
+  }
+}

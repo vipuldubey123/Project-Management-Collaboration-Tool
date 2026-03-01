@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedProjects    Project[]       @relation("ProjectOwner")
+  projectMembers   ProjectMember[]
+  assignedTasks    Task[]          @relation("TaskAssignee")
+  createdTasks     Task[]          @relation("TaskCreator")
+  comments         Comment[]
+  activityLogs     ActivityLog[]
+  refreshTokens    RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  color       String   @default("#6366f1")
+  ownerId     String
+  owner       User     @relation("ProjectOwner", fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members  ProjectMember[]
+  boards   Board[]
+}
+
+model ProjectMember {
+  id        String      @id @default(uuid())
+  projectId String
+  userId    String
+  role      MemberRole  @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Board {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tasks Task[]
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?      @db.Text
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  position    Int          @default(0)
+  boardId     String
+  board       Board        @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId   String
+  creator     User         @relation("TaskCreator", fields: [creatorId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  comments     Comment[]
+  activityLogs ActivityLog[]
+  tags         TaskTag[]
+}
+
+model TaskTag {
+  id     String @id @default(uuid())
+  name   String
+  color  String @default("#6366f1")
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   String?  @db.Text
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
